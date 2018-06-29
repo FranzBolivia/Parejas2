@@ -164,7 +164,9 @@ public class Juego extends Activity {
         imagenes.add(getResources().getDrawable(R.drawable.card21));
     }
 
-    class ButtonListener implements View.OnClickListener {
+   /*
+   Se deshabilita para el envio de mensajes
+   class ButtonListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             synchronized (lock) {
@@ -175,6 +177,47 @@ public class Juego extends Activity {
                 int x = id / 100;
                 int y = id % 100;
                 descubrirCasilla(x, y);
+            }
+        }
+    }*/
+
+    class ButtonListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            synchronized (lock) {
+                if (Partida.tipoPartida == "REAL") {
+                    if (Partida.turno != jugadorLocal) {
+                        Toast.makeText(getApplicationContext(), "No es tu turno.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                }
+                if (primeraCasilla != null && segundaCasilla != null) {
+                    return;
+                }
+                int id = v.getId();
+                int x = id / 100;
+                int y = id % 100;
+                descubrirCasilla(x, y);
+                if (Partida.tipoPartida == "REAL") {
+                    byte[] mensaje;
+                    mensaje = new byte[3];
+                    mensaje[0] = (byte) 'C';
+                    mensaje[1] = (byte) x;
+                    mensaje[2] = (byte) y;
+                    for (Participant p : mParticipants) {
+                        if (!p.getParticipantId().equals(mMyId)) {
+                            mRealTimeMultiplayerClient.sendReliableMessage(mensaje, mRoomId, p.getParticipantId(), new RealTimeMultiplayerClient.ReliableMessageSentCallback() {
+                                @Override
+                                public void onRealTimeMessageSent(int statusCode, int tokenId, String recipientParticipantId) {
+                                }
+                            }).addOnSuccessListener(new OnSuccessListener<Integer>() {
+                                @Override
+                                public void onSuccess(Integer tokenId) {
+                                }
+                            });
+                        }
+                    }
+                }
             }
         }
     }
